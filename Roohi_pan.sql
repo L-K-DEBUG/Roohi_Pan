@@ -197,3 +197,8 @@ CREATE INDEX idx_receipts_created     ON receipts (created_at);
 CREATE INDEX idx_audit_employee       ON audit_log (employee_id);
 CREATE INDEX idx_audit_action         ON audit_log (action);
 CREATE INDEX idx_audit_created        ON audit_log (created_at);
+
+USE Roohi_pan;
+
+ALTER TABLE employees
+    MODIFY COLUMN role ENUM('owner','employee') NOT NULL DEFAULT 'employee';

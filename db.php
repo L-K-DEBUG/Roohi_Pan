@@ -5,7 +5,7 @@ $host = "localhost";
 $port = 3306;          // Change this if your MySQL port is different
 $username = "root";    // Default XAMPP username
 $password = "";        // Default XAMPP password (blank)
-$database = "Roohi_pan";
+$database = "roohi_pan";
 
 // Create connection
 $conn = new mysqli($host, $username, $password, $database, $port);

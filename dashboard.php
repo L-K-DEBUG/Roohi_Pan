@@ -63,6 +63,7 @@ $message = $_GET['msg'] ?? '';
 <header>
   <h1>Hi, <?= htmlspecialchars($employee['name']) ?> 👋</h1>
   <div>
+    <a href="manage_items.php">Manage Items</a>
     <a href="stock.php">Update Stock</a>
     <a href="report.php">Reports</a>
     <a href="logout.php">Logout</a>

@@ -40,22 +40,237 @@ $message = $_GET['msg'] ?? '';
 <meta charset="UTF-8" />
 <title>Roohi Pan House - Dashboard</title>
 <style>
-  :root { --primary-green: #1e7a34; --light-green: #e8f5e9; }
-  * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
-  body { background: var(--light-green); min-height: 100vh; }
-  header { background: var(--primary-green); color: #fff; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-  header h1 { font-size: 18px; }
-  header a { color: #fff; text-decoration: none; font-size: 13px; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 6px; margin-left: 8px; }
-  .container { padding: 24px; max-width: 800px; margin: 0 auto; }
-  .card { background: #fff; border-radius: 10px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
-  .item-name { font-weight: bold; font-size: 15px; }
-  .item-sub { color: #666; font-size: 13px; }
-  .sell-form { display: flex; gap: 6px; align-items: center; }
-  input[type=number] { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
-  button { padding: 8px 14px; border: none; border-radius: 6px; background: var(--primary-green); color: #fff; cursor: pointer; }
-  button:hover { background: #16602a; }
-  .message { background: #fff3cd; color: #856404; padding: 10px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
-  .empty { text-align: center; color: #777; padding: 40px 0; }
+  :root {
+    --primary-green: #1e7a34;
+    --primary-green-dark: #16602a;
+    --primary-green-light: #2a9c47;
+    --light-green: #e8f5e9;
+    --bg-soft: #f4faf5;
+    --text-dark: #1a2a1e;
+    --text-muted: #5f7165;
+    --card-shadow: 0 1px 3px rgba(20, 60, 30, 0.06), 0 4px 12px rgba(20, 60, 30, 0.04);
+    --card-shadow-hover: 0 2px 6px rgba(20, 60, 30, 0.08), 0 8px 20px rgba(20, 60, 30, 0.08);
+    --radius: 12px;
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg-soft);
+    min-height: 100vh;
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+    color: #fff;
+    padding: 18px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 2px 12px rgba(20, 60, 30, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  header > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  header a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.14);
+    padding: 7px 14px;
+    border-radius: 8px;
+    margin-left: 0;
+    transition: background 0.15s ease, transform 0.15s ease;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  header a:hover {
+    background: rgba(255, 255, 255, 0.24);
+    transform: translateY(-1px);
+  }
+
+  header a:active {
+    transform: translateY(0);
+  }
+
+  /* ---------- CONTAINER ---------- */
+  .container {
+    padding: 28px 24px;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  /* ---------- CARD ---------- */
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid rgba(30, 122, 52, 0.06);
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-1px);
+    border-color: rgba(30, 122, 52, 0.15);
+  }
+
+  .item-name {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+  }
+
+  .item-sub {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* ---------- SELL FORM ---------- */
+  .sell-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  input[type=number] {
+    width: 78px;
+    padding: 9px 10px;
+    border: 1.5px solid #d7e3da;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fafffb;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    -moz-appearance: textfield;
+  }
+
+  input[type=number]:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(30, 122, 52, 0.12);
+  }
+
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  button {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary-green);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    box-shadow: 0 1px 3px rgba(30, 122, 52, 0.25);
+  }
+
+  button:hover {
+    background: var(--primary-green-dark);
+    box-shadow: 0 3px 8px rgba(30, 122, 52, 0.3);
+  }
+
+  button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(30, 122, 52, 0.25);
+  }
+
+  /* ---------- MESSAGE ---------- */
+  .message {
+    background: #fff8e1;
+    color: #8a6d1a;
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    border-left: 4px solid #f0b429;
+    box-shadow: 0 1px 3px rgba(138, 109, 26, 0.08);
+  }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 56px 24px;
+    background: #fff;
+    border-radius: var(--radius);
+    border: 2px dashed #cfe3d4;
+    font-size: 14px;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 600px) {
+    header {
+      padding: 14px 16px;
+    }
+
+    header h1 {
+      font-size: 15px;
+    }
+
+    header a {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .card {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .sell-form {
+      justify-content: flex-end;
+    }
+
+    input[type=number] {
+      flex: 1;
+      width: auto;
+    }
+  }
 </style>
 </head>
 <body>

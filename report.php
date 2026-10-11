@@ -10,7 +10,7 @@ $perItemStmt = $conn->prepare("
     FROM sales s
     JOIN daily_stock ds ON s.daily_stock_id = ds.id
     JOIN items i ON ds.item_id = i.id
-    WHERE DATE(s.sale_time) BETWEEN ? AND ?
+    WHERE DATE(s.created_at) BETWEEN ? AND ?
     GROUP BY i.id
     ORDER BY total_qty DESC
 ");
@@ -22,7 +22,7 @@ $perItemResult = $perItemStmt->get_result();
 $overallStmt = $conn->prepare("
     SELECT SUM(s.quantity_sold) AS total_items_sold, SUM(s.quantity_sold * s.unit_price) AS total_revenue
     FROM sales s
-    WHERE DATE(s.sale_time) BETWEEN ? AND ?
+    WHERE DATE(s.created_at) BETWEEN ? AND ?
 ");
 $overallStmt->bind_param("ss", $start_date, $end_date);
 $overallStmt->execute();

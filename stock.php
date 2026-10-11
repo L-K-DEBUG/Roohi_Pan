@@ -10,10 +10,10 @@ if (isset($_POST['submit_stock'])) {
 
         $item_id = intval($item_id);
         $stmt = $conn->prepare("
-            INSERT INTO daily_stock (item_id, quantity_available, quantity_remaining, employee_id, stock_date)
+            INSERT INTO daily_stock (item_id, quantity_prepared, quantity_remaining, employee_id, stock_date)
             VALUES (?, ?, ?, ?, CURDATE())
-            ON DUPLICATE KEY UPDATE quantity_available = VALUES(quantity_available),
-                                     quantity_remaining = VALUES(quantity_available),
+            ON DUPLICATE KEY UPDATE quantity_prepared = VALUES(quantity_prepared),
+                                     quantity_remaining = VALUES(quantity_prepared),
                                      employee_id = VALUES(employee_id)
         ");
         $stmt->bind_param("iiii", $item_id, $qty, $qty, $employee_id);
@@ -28,7 +28,7 @@ $message = $_GET['msg'] ?? '';
 // Get all active items, with today's stock if already set
 $items = $conn->query("
     SELECT i.id, i.name, i.unit,
-           COALESCE(ds.quantity_available, 0) AS quantity_available
+           COALESCE(ds.quantity_prepared, 0) AS quantity_prepared
     FROM items i
     LEFT JOIN daily_stock ds ON ds.item_id = i.id AND ds.stock_date = CURDATE()
     WHERE i.active = 1
@@ -69,7 +69,7 @@ $items = $conn->query("
       <?php while ($item = $items->fetch_assoc()): ?>
         <div class="row">
           <span><?= htmlspecialchars($item['name']) ?> (<?= htmlspecialchars($item['unit']) ?>)</span>
-          <input type="number" name="quantity[<?= $item['id'] ?>]" min="0" value="<?= $item['quantity_available'] ?>">
+          <input type="number" name="quantity[<?= $item['id'] ?>]" min="0" value="<?= $item['quantity_prepared'] ?>">
         </div>
       <?php endwhile; ?>
       <button type="submit" name="submit_stock">Save Today's Stock</button>

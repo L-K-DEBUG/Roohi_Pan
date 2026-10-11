@@ -1,108 +1,157 @@
 <?php
 require 'db.php';
+if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit; }
 
-// Fetch active employees for the dropdown
-$result = $conn->query("SELECT id, name FROM employees WHERE active = 1 ORDER BY name ASC");
+// Fetch all items
+$items_query = $conn->query("SELECT * FROM items WHERE stock > 0 ORDER BY category, name");
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<title>Roohi Pan House - Login</title>
-<style>
-  :root {
-    --primary-green: #1e7a34;
-    --light-green: #e8f5e9;
-    --white: #ffffff;
-  }
+    <title>POS - Roohi Pan</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+    let cart = [];
 
-  * { box-sizing: border-box; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    function addToCart(id, name, price) {
+        let existing = cart.find(item => item.id === id);
+        if (existing) {
+            existing.quantity++;
+        } else {
+            cart.push({ id: id, name: name, price: price, quantity: 1 });
+        }
+        updateCartUI();
+    }
 
-  body {
-    background: linear-gradient(to bottom, #1e7a34 0%, #e8f5e9 55%, #ffffff 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
+    function removeFromCart(index) {
+        // Remove the item from the cart array
+        cart.splice(index, 1);
+        // Re-render the cart
+        updateCartUI();
+    }
 
-  .login-card {
-    background: var(--white);
-    border-radius: 14px;
-    padding: 40px 36px;
-    width: 340px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.1);
-    text-align: center;
-  }
+    function updateCartUI() {
+        let cartContainer = document.getElementById('cart-items');
+        let totalDisplay = document.getElementById('total');
+        cartContainer.innerHTML = '';
+        let total = 0;
 
-  .logo {
-    width: 90px;
-    height: 90px;
-    margin: 0 auto 16px auto;
-    display: block;
-  }
+        if (cart.length === 0) {
+            cartContainer.innerHTML = '<p style="color:#888;">Tap items to add to the order.</p>';
+            totalDisplay.innerText = 'KSh 0';
+            return;
+        }
 
-  h1 {
-    color: var(--primary-green);
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
+        cart.forEach((item, index) => {
+            let itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            
+            // Added the remove button ("X") here
+            cartContainer.innerHTML += `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
+                    <span style="flex: 1;">${item.name} x${item.quantity}</span>
+                    <span style="margin-right: 15px; font-weight: bold;">KSh ${itemTotal}</span>
+                    <button onclick="removeFromCart(${index})" style="background: #ff4d4d; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 3px 8px; font-weight: bold;">X</button>
+                </div>
+            `;
+        });
+        totalDisplay.innerText = 'KSh ' + total;
+    }
 
-  p.subtitle {
-    color: #666;
-    font-size: 13px;
-    margin-bottom: 24px;
-  }
+    function placeOrder() {
+        if (cart.length === 0) { alert('Cart is empty!'); return; }
+        let orderType = document.getElementById('order_type').value;
+        let tableNo = document.getElementById('table_no').value;
+        let customer = document.getElementById('customer').value;
 
-  select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 14px;
-    margin-bottom: 16px;
-  }
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'process_order.php';
 
-  button {
-    width: 100%;
-    padding: 10px;
-    background: var(--primary-green);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    cursor: pointer;
-  }
+        let data = {
+            order_type: orderType,
+            table_no: tableNo,
+            customer_name: customer,
+            cart: cart
+        };
 
-  button:hover {
-    background: #16602a;
-  }
-
-  .error-msg {
-    color: #c0392b;
-    font-size: 13px;
-    margin-top: 10px;
-  }
-</style>
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'order_data';
+        input.value = JSON.stringify(data);
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+    </script>
 </head>
 <body>
+        <div class="sidebar">
+        <h2>Roohi Pan</h2>
+        <a href="index.php">New Order</a>
+        <a href="reports.php">Reports</a>
+        <?php if($_SESSION['role'] == 'owner'): ?>
+            <a href="staff.php">Staff</a>
+            <a href="inventory.php">Inventory</a> <!-- ADD THIS LINE -->
+        <?php endif; ?>
+        <a href="logout.php" style="margin-top:auto;">Sign Out</a>
+    </div>
 
-  <div class="login-card">
-    <!-- Replace logo.png with the actual Roohi Pan House logo file -->
-    <img src="logo.png" alt="Roohi Pan House Logo" class="logo" />
-    <h1>Roohi Pan House</h1>
-    <p class="subtitle">Select your name to continue</p>
+    <div class="main-content">
+        <div class="header">
+            <h2>New Order</h2>
+        </div>
+        
+        <div style="display: flex; gap: 20px;">
+            <!-- Menu Section -->
+            <div style="flex: 3;">
+                <div class="grid-container">
+                    <?php 
+                    $current_category = '';
+                    while($item = $items_query->fetch_assoc()): 
+                        // Check if the category has changed to print a new header
+                        if ($current_category != $item['category']) {
+                            $current_category = $item['category'];
+                            echo "<h3 style='grid-column: 1 / -1; margin-top: 25px; margin-bottom: 5px; color: #0d2b1f; border-bottom: 2px solid #a3e635; padding-bottom: 5px;'>" . htmlspecialchars($current_category) . "</h3>";
+                        }
+                    ?>
+                        <!-- Stock display is removed below -->
+                        <div class="item-card" onclick="addToCart(<?php echo $item['id']; ?>, '<?php echo $item['name']; ?>', <?php echo $item['price']; ?>)">
+                            <h4><?php echo $item['name']; ?></h4>
+                            <p class="price">KSh <?php echo $item['price']; ?></p>
+                        </div>
+                    <?php endwhile; ?>
+                </div>
+            </div>
 
-    <form action="dashboard.php" method="POST">
-      <select name="employee_id" required>
-        <option value="" disabled selected>-- Choose your name --</option>
-        <?php while ($row = $result->fetch_assoc()): ?>
-          <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['name']) ?></option>
-        <?php endwhile; ?>
-      </select>
-      <button type="submit">Continue</button>
-    </form>
-  </div>
+            <!-- Cart Section -->
+            <div style="flex: 1; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px;">
+                <h3 style="margin-bottom:15px; color:#0d2b1f;">Current Order</h3>
+                
+                <label>Order Type:</label>
+                <select id="order_type">
+                    <option value="Dine-in">Dine-in</option>
+                    <option value="Delivery">Delivery</option>
+                </select>
 
+                <input type="text" id="table_no" placeholder="Table No. (Optional)">
+                <input type="text" id="customer" placeholder="Customer Name (Optional)">
+
+                <hr style="margin: 15px 0;">
+                
+                <div id="cart-items" style="max-height: 300px; overflow-y: auto;">
+                    <p style="color:#888;">Tap items to add to the order.</p>
+                </div>
+
+                <hr style="margin: 15px 0;">
+                <div style="display:flex; justify-content:space-between; font-size:1.2rem; font-weight:bold; margin-bottom:15px;">
+                    <span>Total</span>
+                    <span id="total">KSh 0</span>
+                </div>
+
+                <button onclick="placeOrder()" class="btn" style="width:100%; padding:15px;">Place Order & Print</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

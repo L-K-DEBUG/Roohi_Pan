@@ -1,0 +1,118 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f4f7f4;
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #0d2b1f; /* Dark Green */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #a3e635; /* Light Green Accent */
+}
+
+.sidebar a {
+    color: #ccc;
+    text-decoration: none;
+    padding: 15px 20px;
+    display: block;
+    transition: 0.3s;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background-color: #a3e635;
+    color: #0d2b1f;
+    font-weight: bold;
+    border-radius: 0 20px 20px 0;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Cards for POS */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.item-card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid #e0e0e0;
+}
+
+.item-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    border-color: #a3e635;
+}
+
+.item-card h4 { color: #0d2b1f; margin-bottom: 5px; }
+.item-card .price { color: #a3e635; font-weight: bold; font-size: 1.2rem; }
+.item-card .stock { font-size: 0.8rem; color: #888; }
+
+/* Forms and Buttons */
+.btn {
+    background-color: #a3e635;
+    color: #0d2b1f;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-danger { background-color: #dc3545; color: white; }
+.btn-primary { background-color: #0d2b1f; color: white; }
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Login/Register Card */
+.auth-card {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    width: 400px;
+    margin: 100px auto;
+    text-align: center;
+}

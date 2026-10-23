@@ -26,8 +26,10 @@ switch ($filter) {
         break;
 }
 
-// Stats (Top Cards)
-$stats = $conn->query("SELECT COUNT(id) as orders, SUM(total_amount) as revenue, 
+// Stats (Top Cards) - Now separates Paid and Unpaid
+$stats = $conn->query("SELECT COUNT(id) as orders, 
+                        SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) as revenue, 
+                        SUM(CASE WHEN payment_status = 'unpaid' THEN total_amount ELSE 0 END) as credit,
                         SUM(CASE WHEN order_type = 'Dine-in' THEN 1 ELSE 0 END) as dine_in, 
                         SUM(CASE WHEN order_type = 'Delivery' THEN 1 ELSE 0 END) as delivery 
                         FROM orders o $date_condition")->fetch_assoc();
@@ -63,6 +65,7 @@ $orders_list = $conn->query("
         <div class="sidebar">
         <h2>Roohi Pan</h2>
         <a href="index.php">New Order</a>
+        <a href="credit.php">Credit Book</a> <!-- ADD THIS -->
         <a href="reports.php">Reports</a>
         <?php if($_SESSION['role'] == 'owner'): ?>
             <a href="staff.php">Staff</a>
@@ -85,21 +88,25 @@ $orders_list = $conn->query("
         </div>
 
         <!-- Stats Cards -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px;">
             <div style="background: #0d2b1f; color: white; padding: 20px; border-radius: 10px;">
-                <h3>REVENUE</h3>
+                <h3 style="font-size: 0.9rem;">REVENUE (PAID)</h3>
                 <h2>KSh <?php echo number_format($stats['revenue'] ?? 0); ?></h2>
             </div>
+            <div style="background: #fdecea; color: #c62828; padding: 20px; border-radius: 10px;">
+                <h3 style="font-size: 0.9rem;">OUTSTANDING CREDIT</h3>
+                <h2>KSh <?php echo number_format($stats['credit'] ?? 0); ?></h2>
+            </div>
             <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3>ORDERS</h3>
+                <h3 style="font-size: 0.9rem;">ORDERS</h3>
                 <h2><?php echo $stats['orders'] ?? 0; ?></h2>
             </div>
             <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3>DINE-IN</h3>
+                <h3 style="font-size: 0.9rem;">DINE-IN</h3>
                 <h2><?php echo $stats['dine_in'] ?? 0; ?></h2>
             </div>
             <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3>DELIVERY</h3>
+                <h3 style="font-size: 0.9rem;">DELIVERY</h3>
                 <h2><?php echo $stats['delivery'] ?? 0; ?></h2>
             </div>
         </div>

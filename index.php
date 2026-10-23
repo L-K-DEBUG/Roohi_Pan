@@ -58,37 +58,40 @@ $items_query = $conn->query("SELECT * FROM items WHERE stock > 0 ORDER BY catego
         totalDisplay.innerText = 'KSh ' + total;
     }
 
-    function placeOrder() {
-        if (cart.length === 0) { alert('Cart is empty!'); return; }
-        let orderType = document.getElementById('order_type').value;
-        let tableNo = document.getElementById('table_no').value;
-        let customer = document.getElementById('customer').value;
+            function placeOrder() {
+            if (cart.length === 0) { alert('Cart is empty!'); return; }
+            let orderType = document.getElementById('order_type').value;
+            let tableNo = document.getElementById('table_no').value;
+            let customer = document.getElementById('customer').value;
+            let paymentStatus = document.querySelector('input[name="payment_status"]:checked').value; // NEW
 
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = 'process_order.php';
+            let form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'process_order.php';
 
-        let data = {
-            order_type: orderType,
-            table_no: tableNo,
-            customer_name: customer,
-            cart: cart
-        };
+            let data = {
+                order_type: orderType,
+                table_no: tableNo,
+                customer_name: customer,
+                payment_status: paymentStatus, // NEW
+                cart: cart
+            };
 
-        let input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'order_data';
-        input.value = JSON.stringify(data);
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'order_data';
+            input.value = JSON.stringify(data);
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 </head>
 <body>
         <div class="sidebar">
         <h2>Roohi Pan</h2>
         <a href="index.php">New Order</a>
+        <a href="credit.php">Credit Book</a> <!-- ADD THIS -->
         <a href="reports.php">Reports</a>
         <?php if($_SESSION['role'] == 'owner'): ?>
             <a href="staff.php">Staff</a>
@@ -136,6 +139,16 @@ $items_query = $conn->query("SELECT * FROM items WHERE stock > 0 ORDER BY catego
 
                 <input type="text" id="table_no" placeholder="Table No. (Optional)">
                 <input type="text" id="customer" placeholder="Customer Name (Optional)">
+                <!-- NEW PAYMENT STATUS TOGGLE -->
+                <label style="margin-top: 10px; display: block; font-size: 0.9rem; color: #666;">Payment Status:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="radio" name="payment_status" value="paid" checked> Paid
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #c62828;">
+                        <input type="radio" name="payment_status" value="unpaid"> Credit (Unpaid)
+                    </label>
+                </div>
 
                 <hr style="margin: 15px 0;">
                 

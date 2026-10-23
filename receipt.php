@@ -33,6 +33,11 @@ $items_query = $conn->query("SELECT oi.*, i.name FROM order_items oi JOIN items 
             <?php if($order['table_no']) echo "<p>Table: " . $order['table_no'] . "</p>"; ?>
             <?php if($order['customer_name']) echo "<p>Customer: " . $order['customer_name'] . "</p>"; ?>
             <p>Served by: <?php echo $order['username']; ?></p>
+                        <?php if($order['payment_status'] == 'unpaid'): ?>
+                <p style="color: red; font-weight: bold; border: 1px solid red; padding: 5px; margin-top: 10px;">** UNPAID - CREDIT **</p>
+            <?php else: ?>
+                <p style="color: green; font-weight: bold; margin-top: 10px;">** PAID **</p>
+            <?php endif; ?>
         </div>
         <hr>
         <?php while($item = $items_query->fetch_assoc()): ?>

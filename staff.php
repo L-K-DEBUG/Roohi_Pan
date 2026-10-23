@@ -32,6 +32,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY role ASC");
         <div class="sidebar">
         <h2>Roohi Pan</h2>
         <a href="index.php">New Order</a>
+        <a href="credit.php">Credit Book</a> <!-- ADD THIS -->
         <a href="reports.php">Reports</a>
         <?php if($_SESSION['role'] == 'owner'): ?>
             <a href="staff.php">Staff</a>

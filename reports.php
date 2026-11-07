@@ -44,7 +44,7 @@ $most_used = $conn->query("SELECT i.name, SUM(oi.quantity) as total_qty
 
 // FIX 2: Fetch Detailed Order History (with Date, Employee, and Items)
 $orders_list = $conn->query("
-    SELECT o.id, o.created_at, o.order_type, o.total_amount, u.username,
+    SELECT o.id, o.created_at, o.order_type, o.total_amount, o.customer_name, u.username,
            GROUP_CONCAT(CONCAT(i.name, ' (', oi.quantity, ')') SEPARATOR ', ') as items
     FROM orders o
     JOIN users u ON o.user_id = u.id
@@ -137,10 +137,11 @@ $orders_list = $conn->query("
             <h3>Detailed Order History</h3>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 15px;">This shows exactly who took the order, when, and what was sold.</p>
             <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
+                                <table style="width: 100%; border-collapse: collapse;">
                     <tr style="background: #f4f7f4; text-align: left;">
                         <th style="padding: 10px;">Order ID</th>
                         <th style="padding: 10px;">Date & Time</th>
+                        <th style="padding: 10px;">Customer</th> <!-- NEW COLUMN -->
                         <th style="padding: 10px;">Employee Name</th>
                         <th style="padding: 10px;">Type</th>
                         <th style="padding: 10px;">Items Sold</th>
@@ -151,6 +152,10 @@ $orders_list = $conn->query("
                         <tr style="border-bottom: 1px solid #eee;">
                             <td style="padding: 10px; font-weight: bold;">#<?php echo $order['id']; ?></td>
                             <td style="padding: 10px;"><?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></td>
+                            <!-- NEW DATA -->
+                            <td style="padding: 10px; color: #c62828; font-weight: bold;">
+                                <?php echo htmlspecialchars($order['customer_name']); ?>
+                            </td>
                             <td style="padding: 10px; color: #0d2b1f; font-weight: bold;"><?php echo $order['username']; ?></td>
                             <td style="padding: 10px;"><?php echo $order['order_type']; ?></td>
                             <td style="padding: 10px; font-size: 0.85rem; color: #555;"><?php echo $order['items']; ?></td>
@@ -158,7 +163,7 @@ $orders_list = $conn->query("
                         </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="6" style="padding: 10px; text-align: center;">No orders found for this period.</td></tr>
+                        <tr><td colspan="7" style="padding: 10px; text-align: center;">No orders found for this period.</td></tr> <!-- Note: Colspan changed to 7 -->
                     <?php endif; ?>
                 </table>
             </div>

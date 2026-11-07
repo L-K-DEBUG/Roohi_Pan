@@ -58,13 +58,22 @@ $items_query = $conn->query("SELECT * FROM items WHERE stock > 0 ORDER BY catego
         totalDisplay.innerText = 'KSh ' + total;
     }
 
-            function placeOrder() {
+                    function placeOrder() {
             if (cart.length === 0) { alert('Cart is empty!'); return; }
+            
+            let customer = document.getElementById('customer').value;
+            // NEW CHECK: Ensure customer name is provided
+            if (customer.trim() === '') {
+                alert('Please enter the customer name for records.');
+                document.getElementById('customer').focus();
+                return;
+            }
+
             let orderType = document.getElementById('order_type').value;
             let tableNo = document.getElementById('table_no').value;
-            let customer = document.getElementById('customer').value;
-            let paymentStatus = document.querySelector('input[name="payment_status"]:checked').value; // NEW
-
+            let paymentStatus = document.querySelector('input[name="payment_status"]:checked').value; 
+            
+            // ... rest of your form submission code ...
             let form = document.createElement('form');
             form.method = 'POST';
             form.action = 'process_order.php';
@@ -138,7 +147,7 @@ $items_query = $conn->query("SELECT * FROM items WHERE stock > 0 ORDER BY catego
                 </select>
 
                 <input type="text" id="table_no" placeholder="Table No. (Optional)">
-                <input type="text" id="customer" placeholder="Customer Name (Optional)">
+                <input type="text" id="customer" placeholder="Customer Name" required>
                 <!-- NEW PAYMENT STATUS TOGGLE -->
                 <label style="margin-top: 10px; display: block; font-size: 0.9rem; color: #666;">Payment Status:</label>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">

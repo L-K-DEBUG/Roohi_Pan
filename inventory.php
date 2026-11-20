@@ -180,7 +180,7 @@ $inventory = $conn->query("SELECT * FROM inventory ORDER BY item_name ASC");
                 <?php while($item = $inventory->fetch_assoc()): ?>
                     <div class="inv-card">
                         <h4><?php echo htmlspecialchars($item['item_name']); ?></h4>
-                        <div class="qty"><?php echo $item['quantity']; ?></div>
+                       <div class="qty"><?php echo floatval($item['quantity']); ?></div>
                         
                         <div class="inv-actions no-print">
                             <!-- Subtract Button -->

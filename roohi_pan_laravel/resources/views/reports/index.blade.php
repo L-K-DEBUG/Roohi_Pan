@@ -36,7 +36,7 @@
     <h2>Detailed Order History</h2>
     <p class="muted">Completed orders with the team member and menu items recorded.</p>
     <div class="table-scroll"><table>
-        <thead><tr><th>Order</th><th>Date &amp; time</th><th>Customer</th><th>Employee</th><th>Type</th><th>Items sold</th><th>Total</th></tr></thead>
+        <thead><tr><th>Order</th><th>Date &amp; time</th><th>Customer</th><th>Employee</th><th>Type</th><th>Payment method</th><th>Items sold</th><th>Total</th></tr></thead>
         <tbody>
         @forelse ($history as $order)
             <tr>
@@ -45,11 +45,12 @@
                 <td>{{ $order->customer_name ?: 'Walk-in Customer' }}</td>
                 <td>{{ $order->user->username ?: $order->user->name }}</td>
                 <td>{{ $order->order_type }}</td>
+                <td>{{ $order->payment_status === 'unpaid' ? 'Unpaid' : ($order->payment_method === 'mpesa' ? 'M-Pesa' : ($order->payment_method === 'cash' ? 'Cash' : 'Not recorded')) }}</td>
                 <td>{{ $order->items->map(fn ($line) => $line->item->name . ' (' . $line->quantity . ')')->implode(', ') }}</td>
                 <td><strong>KSh {{ number_format($order->total_amount) }}</strong></td>
             </tr>
         @empty
-            <tr><td colspan="7" class="empty-state">No orders found for this period.</td></tr>
+            <tr><td colspan="8" class="empty-state">No orders found for this period.</td></tr>
         @endforelse
         </tbody>
     </table></div>

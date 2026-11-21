@@ -28,7 +28,7 @@
         </div>
     </aside>
     <main class="main-content">
-        @if ($lowStockItems->isNotEmpty())
+        @if (! request()->routeIs('orders.receipt', 'credit.index') && $lowStockItems->isNotEmpty())
             <section class="stock-alert" role="status" aria-label="Low stock notice">
                 <div class="stock-alert-heading">
                     <span class="stock-alert-icon" aria-hidden="true">!</span>

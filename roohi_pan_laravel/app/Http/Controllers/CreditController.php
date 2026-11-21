@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CreditController extends Controller
@@ -20,10 +22,17 @@ class CreditController extends Controller
         return view('credit.index', compact('orders'));
     }
 
-    public function settle(Order $order): RedirectResponse
+    public function settle(Request $request, Order $order): RedirectResponse
     {
+        $data = $request->validate([
+            'payment_method' => ['required', Rule::in(['cash', 'mpesa'])],
+        ]);
+
         if ($order->status === 'completed' && $order->payment_status === 'unpaid') {
-            $order->update(['payment_status' => 'paid']);
+            $order->update([
+                'payment_status' => 'paid',
+                'payment_method' => $data['payment_method'],
+            ]);
         }
 
         return redirect()->route('credit.index')->with('status', 'Payment recorded.');

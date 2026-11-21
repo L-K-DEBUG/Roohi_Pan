@@ -57,12 +57,35 @@ test('an order cannot exceed available menu stock', function () {
             'order_type' => 'Dine-in',
             'customer_name' => 'Walk-up',
             'payment_status' => 'paid',
+            'payment_method' => 'cash',
             'cart' => [['id' => $item->id, 'quantity' => 2]],
         ])
         ->assertSessionHasErrors('cart');
 
     $this->assertDatabaseCount('orders', 0);
     $this->assertSame(1, $item->fresh()->stock);
+});
+
+test('paid orders require a cash or M-Pesa payment method', function () {
+    $user = User::factory()->create(['role' => 'employee']);
+    $item = Item::create([
+        'name' => 'Vanilla Faluda',
+        'category' => 'FALUDA',
+        'price' => 400,
+        'stock' => 10,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('orders.store'), [
+            'order_type' => 'Dine-in',
+            'customer_name' => 'Customer',
+            'payment_status' => 'paid',
+            'cart' => [['id' => $item->id, 'quantity' => 1]],
+        ])
+        ->assertSessionHasErrors('payment_method');
+
+    $this->assertDatabaseCount('orders', 0);
+    $this->assertSame(10, $item->fresh()->stock);
 });
 
 test('owners and employees see item-specific low-stock warnings', function () {
@@ -95,7 +118,7 @@ test('owners and employees see item-specific low-stock warnings', function () {
         'name' => 'Coca-Cola (Bottle)',
         'category' => 'SOFT DRINKS (BOTTLE)',
         'price' => 100,
-        'stock' => 10,
+        'stock' => 0,
     ]);
     Inventory::create(['item_name' => 'Coke (Can)', 'quantity' => 4]);
     Inventory::create(['item_name' => 'Coca-Cola (Bottle)', 'quantity' => 5]);
@@ -109,12 +132,16 @@ test('owners and employees see item-specific low-stock warnings', function () {
             ->assertSee('Coke (Can)')
             ->assertSee('4 remaining')
             ->assertDontSee('alert at')
-            ->assertDontSee('Coca-Cola (Bottle): 5 remaining');
+            ->assertDontSee('Coca-Cola (Bottle)');
 
         foreach ($thresholds as $itemName => $threshold) {
             $response->assertSee($itemName)
                 ->assertSee("{$threshold} remaining");
         }
+
+        $this->get(route('credit.index'))
+            ->assertOk()
+            ->assertDontSee('Stock running low');
     }
 });
 
@@ -132,16 +159,20 @@ test('placing an order shows a low-stock warning for the remaining inventory', f
         'order_type' => 'Dine-in',
         'customer_name' => 'Customer',
         'payment_status' => 'paid',
+        'payment_method' => 'mpesa',
         'cart' => [['id' => $item->id, 'quantity' => 1]],
     ]);
 
     $response->assertSessionHasNoErrors();
     $order = Order::query()->firstOrFail();
+    expect($order->payment_method)->toBe('mpesa');
     $response->assertRedirect(route('orders.receipt', $order));
     $this->get(route('orders.receipt', $order))
         ->assertOk()
+        ->assertSee('Payment method: M-Pesa')
         ->assertSee('Wings')
-        ->assertSee('6 remaining');
+        ->assertDontSee('Stock running low')
+        ->assertDontSee('Please restock these items soon.');
 });
 
 test('orders are rejected when recipe inventory is zero or insufficient', function () {
@@ -162,6 +193,7 @@ test('orders are rejected when recipe inventory is zero or insufficient', functi
                 'order_type' => 'Dine-in',
                 'customer_name' => 'Customer',
                 'payment_status' => 'paid',
+                'payment_method' => 'cash',
                 'cart' => [['id' => $item->id, 'quantity' => 1]],
             ])
             ->assertSessionHasErrors('cart');
@@ -277,8 +309,11 @@ test('menu orders deduct the configured recipe quantities from measured inventor
         'order_type' => 'Dine-in',
         'customer_name' => 'Customer',
         'payment_status' => 'paid',
+        'payment_method' => 'cash',
         'cart' => $cart,
     ])->assertSessionHasNoErrors();
+
+    expect(Order::query()->latest('id')->value('payment_method'))->toBe('cash');
 
     foreach ([
         'Chicken Nuggets' => 93,

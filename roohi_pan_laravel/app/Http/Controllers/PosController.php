@@ -33,6 +33,7 @@ class PosController extends Controller
             'table_no' => ['nullable', 'string', 'max:20'],
             'customer_name' => ['required', 'string', 'max:100'],
             'payment_status' => ['required', 'in:paid,unpaid'],
+            'payment_method' => ['required_if:payment_status,paid', 'nullable', 'in:cash,mpesa'],
             'cart' => ['required', 'array', 'min:1'],
             'cart.*.id' => ['required', 'integer', 'distinct'],
             'cart.*.quantity' => ['required', 'integer', 'min:1'],
@@ -97,6 +98,7 @@ class PosController extends Controller
                 'customer_name' => $data['customer_name'],
                 'total_amount' => $total,
                 'payment_status' => $data['payment_status'],
+                'payment_method' => $data['payment_status'] === 'paid' ? $data['payment_method'] : null,
                 'status' => 'completed',
             ]);
 

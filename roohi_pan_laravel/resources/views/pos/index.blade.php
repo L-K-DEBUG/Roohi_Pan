@@ -44,9 +44,16 @@
             <input id="customer_name" name="customer_name" maxlength="100" required value="{{ old('customer_name') }}">
             <label for="payment_status">Payment status</label>
             <select id="payment_status" name="payment_status" required>
-                <option value="paid">Paid</option>
-                <option value="unpaid">Credit (unpaid)</option>
+                <option value="paid" @selected(old('payment_status', 'paid') === 'paid')>Paid</option>
+                <option value="unpaid" @selected(old('payment_status') === 'unpaid')>Credit (unpaid)</option>
             </select>
+            <div id="payment-method-field">
+                <label for="payment_method">Payment method</label>
+                <select id="payment_method" name="payment_method" required>
+                    <option value="cash" @selected(old('payment_method', 'cash') === 'cash')>Cash</option>
+                    <option value="mpesa" @selected(old('payment_method') === 'mpesa')>M-Pesa</option>
+                </select>
+            </div>
 
             <div id="cart-items" class="cart-items"><p class="muted">Tap menu items to add them to the order.</p></div>
             <div class="cart-total"><span>Total</span><strong id="cart-total">KSh 0</strong></div>
@@ -62,7 +69,20 @@
     const totalDisplay = document.getElementById('cart-total');
     const submitButton = document.getElementById('submit-order');
     const form = document.getElementById('order-form');
+    const paymentStatus = document.getElementById('payment_status');
+    const paymentMethodField = document.getElementById('payment-method-field');
+    const paymentMethod = document.getElementById('payment_method');
     const money = amount => new Intl.NumberFormat('en-KE').format(amount);
+
+    function updatePaymentMethodVisibility() {
+        const isPaid = paymentStatus.value === 'paid';
+        paymentMethodField.hidden = !isPaid;
+        paymentMethod.disabled = !isPaid;
+        paymentMethod.required = isPaid;
+    }
+
+    paymentStatus.addEventListener('change', updatePaymentMethodVisibility);
+    updatePaymentMethodVisibility();
 
     function renderCart() {
         cartContainer.replaceChildren();

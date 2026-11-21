@@ -65,6 +65,8 @@ a { color: #0d2b1f; }
 .button-small { min-height: 32px; padding: 6px 10px; font-size: .85rem; }
 .button-wide { width: 100%; min-height: 48px; }
 input, select { width: 100%; min-height: 40px; margin: 6px 0 14px; padding: 9px 10px; border: 1px solid #cbd4cc; border-radius: 6px; background: #fff; }
+.settle-form { display: inline-flex; align-items: center; gap: 8px; }
+.payment-method-select { width: auto; min-width: 118px; min-height: 32px; margin: 0; padding: 6px 8px; font-size: .85rem; }
 label { display: block; color: #48584d; font-size: .9rem; font-weight: 600; }
 .pos-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(290px, 1fr); align-items: start; gap: 22px; }
 .menu-panel { min-width: 0; }

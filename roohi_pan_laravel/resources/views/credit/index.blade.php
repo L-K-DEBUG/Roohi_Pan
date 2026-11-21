@@ -20,8 +20,13 @@
                     <td>{{ $order->user->username ?: $order->user->name }}</td>
                     <td><strong>KSh {{ number_format($order->total_amount) }}</strong></td>
                     <td class="no-print">
-                        <form method="POST" action="{{ route('credit.settle', $order) }}" onsubmit="return confirm('Confirm payment received?')">
+                        <form class="settle-form" method="POST" action="{{ route('credit.settle', $order) }}" onsubmit="return confirm('Confirm payment received?')">
                             @csrf
+                            <select class="payment-method-select" name="payment_method" required aria-label="Payment method for order {{ $order->id }}">
+                                <option value="">Payment method</option>
+                                <option value="cash">Cash</option>
+                                <option value="mpesa">M-Pesa</option>
+                            </select>
                             <button class="button button-small button-soft" type="submit">Mark as Paid</button>
                         </form>
                     </td>

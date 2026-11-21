@@ -17,6 +17,9 @@
             <p class="{{ $order->payment_status === 'paid' ? 'paid-label' : 'unpaid-label' }}">
                 {{ $order->payment_status === 'paid' ? 'PAID' : 'UNPAID - CREDIT' }}
             </p>
+            @if ($order->payment_status === 'paid' && $order->payment_method)
+                <p>Payment method: {{ $order->payment_method === 'mpesa' ? 'M-Pesa' : 'Cash' }}</p>
+            @endif
             @if ($order->status === 'cancelled')
                 <p class="unpaid-label">CANCELLED</p>
             @endif

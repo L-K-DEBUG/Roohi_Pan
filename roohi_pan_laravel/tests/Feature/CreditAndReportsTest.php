@@ -35,8 +35,22 @@ test('credit can be settled and completed orders appear in reports', function ()
     $this->get(route('credit.index'))
         ->assertOk()
         ->assertSee('Customer')
-        ->assertSee('KSh 800');
+        ->assertSee('KSh 800')
+        ->assertSee('Cash')
+        ->assertSee('M-Pesa');
 
-    $this->post(route('credit.settle', $order))->assertRedirect(route('credit.index'));
+    expect($order->payment_method)->toBeNull();
+    $this->post(route('credit.settle', $order), ['payment_method' => 'mpesa'])
+        ->assertRedirect(route('credit.index'));
     $this->assertSame('paid', $order->fresh()->payment_status);
+    $this->assertSame('mpesa', $order->fresh()->payment_method);
+
+    $this->get(route('orders.receipt', $order))
+        ->assertOk()
+        ->assertSee('Payment method: M-Pesa');
+
+    $this->get(route('reports.index', ['filter' => 'today']))
+        ->assertOk()
+        ->assertSee('Payment method')
+        ->assertSee('M-Pesa');
 });

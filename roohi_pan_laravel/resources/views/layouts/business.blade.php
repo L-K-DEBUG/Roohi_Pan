@@ -28,6 +28,25 @@
         </div>
     </aside>
     <main class="main-content">
+        @if ($lowStockItems->isNotEmpty())
+            <section class="stock-alert" role="status" aria-label="Low stock notice">
+                <div class="stock-alert-heading">
+                    <span class="stock-alert-icon" aria-hidden="true">!</span>
+                    <div>
+                        <strong>Stock running low</strong>
+                        <p>Please restock these items soon.</p>
+                    </div>
+                </div>
+                <ul class="stock-alert-list">
+                    @foreach ($lowStockItems as $item)
+                        <li>
+                            <span>{{ $item->item_name }}</span>
+                            <strong class="stock-alert-quantity">{{ rtrim(rtrim(number_format((float) $item->quantity, 2, '.', ''), '0'), '.') }} remaining</strong>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
         @if (session('status'))
             <div class="notice notice-success">{{ session('status') }}</div>
         @endif

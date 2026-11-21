@@ -9,12 +9,12 @@ final class InventoryRules
     private const ITEM_DEDUCTIONS = [
         'Chicken Nuggets' => ['Chicken Nuggets', 7],
         'Fish Fingers' => ['Fish Fingers', 6],
-        'Half Possin Chicken & Chips' => ['Possin Chicken Portions', 1],
-        'Full Possin Chicken & Chips' => ['Possin Chicken Portions', 2],
+        'Half Possin Chicken & Chips' => ['Chicken', 1],
+        'Full Possin Chicken & Chips' => ['Chicken', 2],
         '½ Fried Chicken Breast' => ['Chicken Breast', 0.5],
-        '½ Fried Chicken Leg' => ['Fried Chicken Portions', 1],
-        'Half Fried Chicken' => ['Fried Chicken Portions', 1],
-        'Full Fried Chicken' => ['Fried Chicken Portions', 2],
+        '½ Fried Chicken Leg' => ['Drumsticks', 1],
+        'Half Fried Chicken' => ['Chicken', 1],
+        'Full Fried Chicken' => ['Chicken', 2],
         'Possin Wings' => ['Wings', 6],
         'Fried Wings' => ['Wings', 6],
         'Masala Wings' => ['Wings', 6],
@@ -38,8 +38,7 @@ final class InventoryRules
         'Chicken' => [
             'Chicken Nuggets',
             'Fish Fingers',
-            'Possin Chicken Portions',
-            'Fried Chicken Portions',
+            'Chicken',
         ],
         'Chicken Breast' => ['Chicken Breast'],
         'Drumsticks' => ['Drumsticks'],
@@ -51,6 +50,21 @@ final class InventoryRules
         'Mutton Samosas' => ['Mutton Samosa'],
         'Vegetable Samosas' => ['Veg Samosa'],
         'Daal Bhajia' => ['Daal Bhajia'],
+    ];
+
+    private const LOW_STOCK_THRESHOLDS = [
+        'Chicken Nuggets' => 10,
+        'Fish Fingers' => 12,
+        'Chicken' => 2,
+        'Drumsticks' => 6,
+        'Ice Lolly' => 5,
+        'Chapati' => 6,
+        'Wings' => 6,
+        'Mandazi' => 7,
+        'Sausage' => 6,
+        'Mutton Samosa' => 8,
+        'Veg Samosa' => 6,
+        'Daal Bhajia' => 7,
     ];
 
     public static function deductionsFor(Item $item): array
@@ -71,5 +85,10 @@ final class InventoryRules
     public static function ingredientGroups(): array
     {
         return self::INGREDIENT_GROUPS;
+    }
+
+    public static function lowStockThresholds(): array
+    {
+        return self::LOW_STOCK_THRESHOLDS;
     }
 }

@@ -16,7 +16,7 @@
             <h2 class="category-title">{{ $group }}</h2>
             <div class="inventory-grid">
         @foreach ($items as $item)
-            <article class="inventory-card">
+            <article id="inventory-item-{{ $item->id }}" class="inventory-card">
                 <h2>{{ $item->item_name }}</h2>
                 <p class="inventory-quantity">{{ rtrim(rtrim(number_format($item->quantity, 2, '.', ''), '0'), '.') }}</p>
                 <p class="inventory-unit">
@@ -32,7 +32,7 @@
                         nuggets
                     @elseif ($item->item_name === 'Fish Fingers')
                         fish fingers
-                    @elseif ($item->item_name === 'Possin Chicken Portions' || $item->item_name === 'Fried Chicken Portions')
+                    @elseif ($item->item_name === 'Chicken')
                         chicken portions
                     @else
                         pieces

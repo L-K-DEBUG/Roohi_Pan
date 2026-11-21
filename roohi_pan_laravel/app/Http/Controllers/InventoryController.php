@@ -67,10 +67,14 @@ class InventoryController extends Controller
         });
 
         if (! $updated) {
-            return back()->withErrors(['quantity' => 'Quantity cannot be reduced below zero.']);
+            return redirect()
+                ->to(route('inventory.index').'#inventory-item-'.$inventory->id)
+                ->withErrors(['quantity' => 'Quantity cannot be reduced below zero.']);
         }
 
-        return redirect()->route('inventory.index')->with('status', 'Inventory quantity updated.');
+        return redirect()
+            ->to(route('inventory.index').'#inventory-item-'.$inventory->id)
+            ->with('status', 'Inventory quantity updated.');
     }
 
     private function ensureOwner(): void

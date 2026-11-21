@@ -61,6 +61,30 @@ class PosController extends Controller
                 }
             }
 
+            $requiredInventory = [];
+            foreach ($cart as $id => $line) {
+                foreach (InventoryRules::deductionsFor($items[$id]) as $deduction) {
+                    $inventoryName = $deduction['item_name'];
+                    $requiredInventory[$inventoryName] = ($requiredInventory[$inventoryName] ?? 0)
+                        + $deduction['quantity'] * (int) $line['quantity'];
+                }
+            }
+
+            ksort($requiredInventory);
+            foreach ($requiredInventory as $inventoryName => $requiredQuantity) {
+                $inventory = Inventory::firstOrCreate(
+                    ['item_name' => $inventoryName],
+                    ['quantity' => 0],
+                );
+                $inventory = Inventory::query()->lockForUpdate()->findOrFail($inventory->id);
+
+                if ($inventory->quantity < $requiredQuantity) {
+                    throw ValidationException::withMessages([
+                        'cart' => "There is not enough {$inventoryName} in stock to place this order.",
+                    ]);
+                }
+            }
+
             $total = 0;
             foreach ($cart as $id => $line) {
                 $total += $items[$id]->price * $line['quantity'];

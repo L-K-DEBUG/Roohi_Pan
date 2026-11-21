@@ -65,6 +65,126 @@ test('an order cannot exceed available menu stock', function () {
     $this->assertSame(1, $item->fresh()->stock);
 });
 
+test('owners and employees see item-specific low-stock warnings', function () {
+    $thresholds = [
+        'Chicken Nuggets' => 10,
+        'Fish Fingers' => 12,
+        'Chicken' => 2,
+        'Drumsticks' => 6,
+        'Ice Lolly' => 5,
+        'Chapati' => 6,
+        'Wings' => 6,
+        'Mandazi' => 7,
+        'Sausage' => 6,
+        'Mutton Samosa' => 8,
+        'Veg Samosa' => 6,
+        'Daal Bhajia' => 7,
+    ];
+
+    foreach ($thresholds as $itemName => $threshold) {
+        Inventory::create(['item_name' => $itemName, 'quantity' => $threshold]);
+    }
+
+    Item::create([
+        'name' => 'Coke (Can)',
+        'category' => 'SOFT DRINKS (CAN)',
+        'price' => 50,
+        'stock' => 10,
+    ]);
+    Item::create([
+        'name' => 'Coca-Cola (Bottle)',
+        'category' => 'SOFT DRINKS (BOTTLE)',
+        'price' => 100,
+        'stock' => 10,
+    ]);
+    Inventory::create(['item_name' => 'Coke (Can)', 'quantity' => 4]);
+    Inventory::create(['item_name' => 'Coca-Cola (Bottle)', 'quantity' => 5]);
+
+    foreach (['owner', 'employee'] as $role) {
+        $response = $this->actingAs(User::factory()->create(['role' => $role]))
+            ->get(route('pos.index'))
+            ->assertOk()
+            ->assertSee('Stock running low')
+            ->assertSee('Please restock these items soon.')
+            ->assertSee('Coke (Can)')
+            ->assertSee('4 remaining')
+            ->assertDontSee('alert at')
+            ->assertDontSee('Coca-Cola (Bottle): 5 remaining');
+
+        foreach ($thresholds as $itemName => $threshold) {
+            $response->assertSee($itemName)
+                ->assertSee("{$threshold} remaining");
+        }
+    }
+});
+
+test('placing an order shows a low-stock warning for the remaining inventory', function () {
+    $user = User::factory()->create(['role' => 'employee']);
+    $item = Item::create([
+        'name' => 'Fried Wings',
+        'category' => 'WINGS',
+        'price' => 100,
+        'stock' => 5,
+    ]);
+    Inventory::create(['item_name' => 'Wings', 'quantity' => 12]);
+
+    $response = $this->actingAs($user)->post(route('orders.store'), [
+        'order_type' => 'Dine-in',
+        'customer_name' => 'Customer',
+        'payment_status' => 'paid',
+        'cart' => [['id' => $item->id, 'quantity' => 1]],
+    ]);
+
+    $response->assertSessionHasNoErrors();
+    $order = Order::query()->firstOrFail();
+    $response->assertRedirect(route('orders.receipt', $order));
+    $this->get(route('orders.receipt', $order))
+        ->assertOk()
+        ->assertSee('Wings')
+        ->assertSee('6 remaining');
+});
+
+test('orders are rejected when recipe inventory is zero or insufficient', function () {
+    $user = User::factory()->create(['role' => 'employee']);
+    $item = Item::create([
+        'name' => 'Fried Wings',
+        'category' => 'WINGS',
+        'price' => 100,
+        'stock' => 5,
+    ]);
+    $inventory = Inventory::create(['item_name' => 'Wings', 'quantity' => 0]);
+
+    foreach ([0, 5] as $availableQuantity) {
+        $inventory->update(['quantity' => $availableQuantity]);
+
+        $this->actingAs($user)
+            ->post(route('orders.store'), [
+                'order_type' => 'Dine-in',
+                'customer_name' => 'Customer',
+                'payment_status' => 'paid',
+                'cart' => [['id' => $item->id, 'quantity' => 1]],
+            ])
+            ->assertSessionHasErrors('cart');
+
+        $this->assertDatabaseCount('orders', 0);
+        expect((float) $inventory->fresh()->quantity)->toBe((float) $availableQuantity);
+        expect($item->fresh()->stock)->toBe(5);
+    }
+});
+
+test('legacy chicken portion balances are combined into chicken inventory', function () {
+    Inventory::create(['item_name' => 'Chicken', 'quantity' => 2]);
+    Inventory::create(['item_name' => 'Possin Chicken Portions', 'quantity' => 3]);
+    Inventory::create(['item_name' => 'Fried Chicken Portions', 'quantity' => 2.5]);
+
+    $migration = require database_path('migrations/2026_11_21_100000_consolidate_chicken_inventory.php');
+    $migration->up();
+
+    expect((float) Inventory::where('item_name', 'Chicken')->value('quantity'))->toBe(7.5);
+    $this->assertDatabaseMissing('inventory', ['item_name' => 'Possin Chicken Portions']);
+    $this->assertDatabaseMissing('inventory', ['item_name' => 'Fried Chicken Portions']);
+});
+
 test('only owners can use staff and inventory management', function () {
     $employee = User::factory()->create(['role' => 'employee']);
 
@@ -101,7 +221,7 @@ test('owners can manage inventory and open staff management', function () {
     $this->patch(route('inventory.adjust', $inventory), [
         'action' => 'add',
         'quantity' => 0.5,
-    ])->assertRedirect(route('inventory.index'));
+    ])->assertRedirect(route('inventory.index').'#inventory-item-'.$inventory->id);
 
     expect((float) $inventory->fresh()->quantity)->toBe(2.5);
 });
@@ -111,12 +231,12 @@ test('menu orders deduct the configured recipe quantities from measured inventor
     $recipes = [
         ['Chicken Nuggets', 'FISH & CHICKEN BITES', 'Chicken Nuggets', 7],
         ['Fish Fingers', 'FISH & CHICKEN BITES', 'Fish Fingers', 6],
-        ['Half Possin Chicken & Chips', 'POSSIN CHICKEN', 'Possin Chicken Portions', 1],
-        ['Full Possin Chicken & Chips', 'POSSIN CHICKEN', 'Possin Chicken Portions', 2],
+        ['Half Possin Chicken & Chips', 'POSSIN CHICKEN', 'Chicken', 1],
+        ['Full Possin Chicken & Chips', 'POSSIN CHICKEN', 'Chicken', 2],
         ['½ Fried Chicken Breast', 'FRIED CHICKEN', 'Chicken Breast', 0.5],
-        ['½ Fried Chicken Leg', 'FRIED CHICKEN', 'Fried Chicken Portions', 1],
-        ['Half Fried Chicken', 'FRIED CHICKEN', 'Fried Chicken Portions', 1],
-        ['Full Fried Chicken', 'FRIED CHICKEN', 'Fried Chicken Portions', 2],
+        ['½ Fried Chicken Leg', 'FRIED CHICKEN', 'Drumsticks', 1],
+        ['Half Fried Chicken', 'FRIED CHICKEN', 'Chicken', 1],
+        ['Full Fried Chicken', 'FRIED CHICKEN', 'Chicken', 2],
         ['Possin Wings', 'WINGS', 'Wings', 6],
         ['Fried Wings', 'WINGS', 'Wings', 6],
         ['Masala Wings', 'WINGS', 'Wings', 6],
@@ -163,9 +283,8 @@ test('menu orders deduct the configured recipe quantities from measured inventor
     foreach ([
         'Chicken Nuggets' => 93,
         'Fish Fingers' => 94,
-        'Possin Chicken Portions' => 97,
+        'Chicken' => 94,
         'Chicken Breast' => 99.5,
-        'Fried Chicken Portions' => 96,
         'Wings' => 82,
         'Ice Lolly' => 97,
         'Chapati' => 97,
@@ -174,11 +293,14 @@ test('menu orders deduct the configured recipe quantities from measured inventor
         'Mutton Samosa' => 96,
         'Veg Samosa' => 97,
         'Daal Bhajia' => 94,
-        'Drumsticks' => 91,
+        'Drumsticks' => 90,
         'Coke (Can)' => 99,
         'Coca-Cola (Bottle)' => 99,
     ] as $inventoryName => $expectedQuantity) {
         expect((float) Inventory::where('item_name', $inventoryName)->value('quantity'))
             ->toBe((float) $expectedQuantity);
     }
+
+    $this->assertDatabaseMissing('inventory', ['item_name' => 'Possin Chicken Portions']);
+    $this->assertDatabaseMissing('inventory', ['item_name' => 'Fried Chicken Portions']);
 });
